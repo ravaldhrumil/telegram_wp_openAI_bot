@@ -1,0 +1,87 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(45deg, #9effa9, #a9e6ff, #ff9ec1, #ffd700);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite;
+    flex-direction: column;
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+  h1 {
+    text-align: center;
+    margin-top: 50px;
+    color: #110000; /* Text color for better contrast */
+  }
+
+  .container {
+    text-align: center;
+    margin-top: 50px;
+  }
+
+  .button {
+    background-color: #007bff;
+    border: 2px solid #007bff;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    outline: none;
+  }
+
+  .button:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+  }
+
+  .button:active {
+    background-color: #004380;
+    border-color: #004380;
+  }
+
+  .msg {
+    color: green;
+    margin-top: 20px;
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+  }
+
+  .button-animation {
+    animation: pulse 1.5s infinite alternate;
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    100% {
+      transform: scale(1.1);
+    }
+  }

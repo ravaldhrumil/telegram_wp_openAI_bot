@@ -1,0 +1,87 @@
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(45deg, #9effa9, #a9e6ff, #ff9ec1, #ffd700);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite;
+    flex-direction: column;
+  }
+
+  @keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  h1 {
+    text-align: center;
+    margin-top: 50px;
+    color: #007bff;
+  }
+
+  .message {
+    background-color: #dc3545;
+    color: #fff;
+    padding: 10px 20px;
+    margin: 20px auto;
+    text-align: center;
+    border-radius: 5px;
+    max-width: 400px;
+  }
+
+  .integration-container {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .integration {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+  }
+
+  .integration input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  .integration label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .integration button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+
+  .integration button:hover {
+    background-color: #0056b3;
+  }

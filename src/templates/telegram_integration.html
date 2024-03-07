@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TG configuration</title>
+    <link rel="stylesheet" href="telegram_integration.css">
+  </head>
+  <body>
+    <h1>TG configuration</h1>
+    <form action="/new_integration" method="post">
+      <label>
+        App
+        <input type="text" name="configuration" value="telegram" readonly />
+      </label>
+      <label>
+        Open AI key
+        <input
+          type="text"
+          name="open_ai_key"
+          value="{{ open_ai_key }}"
+          readonly
+        />
+      </label>
+      <label>
+        Bot token
+        <input type="text" name="bot_token" placeholder="Bot token" required />
+      </label>
+      <label>
+        Choose assistant: {% for assistant in assistants %}
+        <input
+          type="radio"
+          name="assistant_id"
+          value="{{ assistant.id }}"
+          required
+        />
+        {{ assistant.name }}<br />
+        {% endfor %}
+      </label>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>

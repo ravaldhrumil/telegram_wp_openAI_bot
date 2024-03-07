@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+  </head>
+  <body>
+    {% if msg %} 
+      {% if color %}
+        <div style="background-color: green">{{msg}}</div>
+      {% else %}
+        <div class="message">{{ msg }}</div>
+      {% endif %} 
+    {% endif %}
+    <h1>Dashboard</h1>
+    <div class="integration-container">
+      <div>Older Integrations</div>
+      {% for integration in old_integrations %}
+      <div class="integration">{{ integration.configuration }}</div>
+      {% endfor %}
+      <form action="/new_integration" method="get" class="integration">
+        <label for="configuration">New Integration:</label><br />
+        <input
+          type="radio"
+          name="configuration"
+          id="configuration"
+          value="telegram"
+          required
+        />Telegram<br />
+        <label for="open_ai_key">Open AI Key:</label><br />
+        <input
+          type="text"
+          name="open_ai_key"
+          id="open_ai_key"
+          placeholder="Open AI Key"
+          required
+        /><br /><br />
+        <button type="submit">New Integration</button>
+      </form>
+    </div>
+  </body>
+</html>
