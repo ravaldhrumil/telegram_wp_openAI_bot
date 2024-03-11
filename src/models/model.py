@@ -17,8 +17,9 @@ class User(db.Model):
 class Integration(db.Model):
     integration_id = db.Column(db.String, primary_key=True, nullable=False, default=str(uuid.uuid4()))
     configuration = db.Column(db.String, nullable=False)
+    # bot_name = db.Column(db.String, nullable=False)
     user_id = db.Column(db.String, db.ForeignKey("user.id"), nullable=False)
-
+    # status = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
         return f"configuration={self.configuration})"
@@ -40,3 +41,13 @@ class Openai_thread(db.Model):
     user_id = db.Column(db.String, db.ForeignKey("user.id"), nullable=False)
     chat_id = db.Column(db.String, nullable=False)
     configuration = db.Column(db.String, nullable=False)
+
+class Chat_data(db.Model):
+    chat_id = db.Column(db.String, primary_key=True, nullable=False, default=str(uuid.uuid4()))
+    user_id = db.Column(db.String, db.ForeignKey("user.id"), nullable=False)
+    integration_id = db.Column(db.String, db.ForeignKey("integration.integration_id"), nullable=False)
+    date_time = db.Column(db.String, nullable=False)
+    sender_name = db.Column(db.String, nullable=False)
+    user_message = db.Column(db.String, nullable=False)
+    response = db.Column(db.String, nullable=False)
+    configuration = db.Column(db.String, db.ForeignKey("integration.configuration"), nullable=False)

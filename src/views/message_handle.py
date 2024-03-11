@@ -4,6 +4,8 @@ import requests
 import openai
 import threading
 from src.main.app import app
+import datetime
+import pytz
 
 
 message_view = Blueprint("message_view", __name__)
@@ -15,16 +17,24 @@ def handle_telegram_configuration_id(configuration_id):
     message = update['message']
     chat_id = message['chat']['id']
     user_message = message.get('text', '')
+    sender_name = message['from']['first_name'] + " " + message['from']['last_name']
+    unix_timestamp = message['date']
+ 
+    utc_date_time = datetime.datetime.utcfromtimestamp(unix_timestamp)
+    ist_timezone = pytz.timezone('Asia/Kolkata')
+    ist_date_time = utc_date_time.replace(tzinfo=pytz.utc).astimezone(ist_timezone)
+    date_time = ist_date_time.strftime('%Y-%m-%d %H:%M:%S %Z%z')
+
 
     if user_message:
-        thread1 = threading.Thread(target= fetch_configuration_details, args=[configuration_id, chat_id, user_message])
+        thread1 = threading.Thread(target= fetch_configuration_details, args=[configuration_id, chat_id, user_message, date_time, sender_name])
         thread1.start()
         return "", 200
     
     else:
         return "",404
 
-def fetch_configuration_details(configuration_id, chat_id, user_message):
+def fetch_configuration_details(configuration_id, chat_id, user_message, date_time, sender_name):
     print("fetch_configuration_details")
     with app.app_context():
         configuration_data = Telegram_configuration.query.filter_by(configuration_id=configuration_id).first()
@@ -32,6 +42,10 @@ def fetch_configuration_details(configuration_id, chat_id, user_message):
     open_ai_key = configuration_data.open_ai_key
     user_id = configuration_data.user_id
     assistant_id = configuration_data.assistant_id
+    integration_id = configuration_data.integration_id
+    configuration = configuration_data.configuration
+    
+
 
     TELEGRAM_BASE_URL = f"https://api.telegram.org/bot{bot_token}/"
 
@@ -49,6 +63,19 @@ def fetch_configuration_details(configuration_id, chat_id, user_message):
     send_message(chat_id=chat_id,
                 response=response, 
                 TELEGRAM_BASE_URL=TELEGRAM_BASE_URL)
+    
+    with app.app_context():
+        new_chat = Chat_data(chat_id=chat_id,
+                             user_id=user_id,
+                             integration_id=integration_id,
+                             date_time=date_time,
+                             sender_name=sender_name,
+                             user_message=user_message,
+                             response=response,
+                             configuration=configuration)
+        db.session.add(new_chat)
+        db.session.commit()
+        
 
 def check_thread(chat_id, user_id, open_ai_key):
     print("check_thread")
@@ -141,5 +168,5 @@ def send_message(chat_id, response, TELEGRAM_BASE_URL):
         'text': response
     }
     response = requests.post(TELEGRAM_BASE_URL + 'sendMessage', json=data)
-    # return response
+
     return

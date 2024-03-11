@@ -20,6 +20,7 @@ def verify_tg_bot(token):
     url = f"https://api.telegram.org/bot{token}/getMe"
     response = requests.get(url)
     data = response.json()
+    bot_name = data["result"]["username"]
     if response.status_code == 200 and data["ok"]:
         return True
     else:
@@ -113,9 +114,9 @@ def new_integration(token_data=None):
         if configuration == "telegram":
             bot_token = request.form["bot_token"]
 
-            verified = verify_tg_bot(bot_token)
+            bot_name = verify_tg_bot(bot_token)
 
-            if verified:
+            if bot_name:
                 integration_id = add_integration(configuration=configuration,
                                          user_id=user_id)
                 
@@ -150,7 +151,7 @@ def new_integration(token_data=None):
                 old_integrations = Integration.query.filter_by(user_id=user_id).all()
                 msg = "Wrong bot token"
                 return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
-            
+
 def setting_webhook(configuration_id, bot_token):
     base_url = request.headers['X-Forwarded-Proto'] + "://" + request.headers['X-Forwarded-Host']
     WEBHOOK_URL = f'{base_url}/telegram/{configuration_id}'

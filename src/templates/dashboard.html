@@ -4,22 +4,39 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
-    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="../static/dashboard.css" />
   </head>
   <body>
-    {% if msg %} 
-      {% if color %}
-        <div style="background-color: green">{{msg}}</div>
-      {% else %}
-        <div class="message">{{ msg }}</div>
-      {% endif %} 
-    {% endif %}
+    {% if msg %} {% if color %}
+    <div style="background-color: green">{{msg}}</div>
+    {% else %}
+    <div class="message">{{ msg }}</div>
+    {% endif %} {% endif %}
     <h1>Dashboard</h1>
+
     <div class="integration-container">
       <div>Older Integrations</div>
-      {% for integration in old_integrations %}
-      <div class="integration">{{ integration.configuration }}</div>
-      {% endfor %}
+      <table>
+        <thead>
+          <tr>
+          <th>Configuration</th>
+          <th>Bot</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for integration in old_integrations %}
+          <tr>
+            <td>{{ integration.configuration }}</td>
+            <td>{{ integration.bot_name }}</td>
+          </tr>
+          <div class="integration">{{ integration.configuration }}</div>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+
+
+
       <form action="/new_integration" method="get" class="integration">
         <label for="configuration">New Integration:</label><br />
         <input
