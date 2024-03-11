@@ -48,9 +48,20 @@ def register():
         new_user = User(name=name, email=email, password=hash_password)
         db.session.add(new_user)
         db.session.commit()
-        msg = f"User with email {email} is registered successfully"
 
-        return render_template("index.html", msg=msg)
+        user = User.query.filter_by(email=email).first()
+        payload = {'user_id': user.id,
+                   'exp': datetime.utcnow() + timedelta(hours=1)}
+
+        token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm="HS256")
+
+        session["token"] = token
+        return  redirect(url_for("dashboard_view.dashboard", token = token))
+
+
+
+        # msg = f"User with email {email} is registered successfully"
+        # return render_template("index.html", msg=msg)
     
 @auth_view.route("/login", methods=["GET","POST"])
 def login():

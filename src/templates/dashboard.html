@@ -16,11 +16,12 @@
 
     <div class="integration-container">
       <div>Older Integrations</div>
-      <table>
+      <table border="1" rules="all">
         <thead>
           <tr>
           <th>Configuration</th>
           <th>Bot</th>
+          <th>Status</th>
           </tr>
         </thead>
         <tbody>
@@ -28,6 +29,15 @@
           <tr>
             <td>{{ integration.configuration }}</td>
             <td>{{ integration.bot_name }}</td>
+            <td>
+              {% if integration.status %}
+                Active
+              {% else %}
+                <form action="/activation/{{integration.configuration_id}}/{{integration.bot_token}}">
+                  <button type="Submit">Activate</button>
+                </form>
+              {% endif %}
+            </td>
           </tr>
           <div class="integration">{{ integration.configuration }}</div>
           {% endfor %}

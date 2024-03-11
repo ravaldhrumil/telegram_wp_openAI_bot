@@ -42,7 +42,7 @@ def fetch_configuration_details(configuration_id, chat_id, user_message, date_ti
     open_ai_key = configuration_data.open_ai_key
     user_id = configuration_data.user_id
     assistant_id = configuration_data.assistant_id
-    integration_id = configuration_data.integration_id
+    configuration_id = configuration_data.configuration_id
     configuration = configuration_data.configuration
     
 
@@ -64,15 +64,17 @@ def fetch_configuration_details(configuration_id, chat_id, user_message, date_ti
                 response=response, 
                 TELEGRAM_BASE_URL=TELEGRAM_BASE_URL)
     
+    msg_id = str(uuid.uuid4())
     with app.app_context():
         new_chat = Chat_data(chat_id=chat_id,
                              user_id=user_id,
-                             integration_id=integration_id,
+                             configuration_id=configuration_id,
                              date_time=date_time,
                              sender_name=sender_name,
                              user_message=user_message,
                              response=response,
-                             configuration=configuration)
+                             configuration=configuration,
+                             msg_id=msg_id)
         db.session.add(new_chat)
         db.session.commit()
         

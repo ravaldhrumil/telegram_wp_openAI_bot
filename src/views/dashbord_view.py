@@ -1,4 +1,4 @@
-from flask import render_template, Blueprint, request
+from flask import redirect, render_template, Blueprint, request, url_for
 import sqlalchemy
 from src.views.auth_view import check_for_token
 from src.models.model import *
@@ -13,16 +13,16 @@ dashboard_view = Blueprint("dashboard_view",__name__)
 @check_for_token
 def dashboard(token_data=None):
     user_id = token_data["user_id"]
-    old_integrations = Integration.query.filter_by(user_id=user_id).all()
+    old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
     return render_template("dashboard.html", old_integrations=old_integrations)
 
 def verify_tg_bot(token):
     url = f"https://api.telegram.org/bot{token}/getMe"
     response = requests.get(url)
     data = response.json()
-    bot_name = data["result"]["username"]
-    if response.status_code == 200 and data["ok"]:
-        return True
+    if response.status_code == 200 and data["ok"]:   
+        bot_name = data["result"]["username"]
+        return bot_name
     else:
         return False
 
@@ -36,23 +36,8 @@ def fetch_assistants(open_ai_key):
 
         return my_assistants
 
-def add_integration(configuration, user_id):
-        try:
-            integration_id = str(uuid.uuid4())
-            new_integration = Integration(integration_id=integration_id, 
-                                        configuration=configuration, 
-                                        user_id=user_id)
-            db.session.add(new_integration)
-            db.session.commit()
 
-        except Exception as e:
-            old_integrations = Integration.query.filter_by(user_id=user_id).all()
-            return render_template("dashboard.html", old_integrations=old_integrations, msg=e)
-        
-
-        return integration_id
-
-def add_tg_configuration(open_ai_key, assistant_id, bot_token, configuration, integration_id, user_id):
+def add_tg_configuration(open_ai_key, assistant_id, bot_token, configuration, user_id, bot_name):
     bot = Telegram_configuration.query.filter_by(bot_token=bot_token).first()
 
     if bot:
@@ -65,19 +50,19 @@ def add_tg_configuration(open_ai_key, assistant_id, bot_token, configuration, in
                                                         assistant_id=assistant_id, 
                                                         bot_token=bot_token,
                                                         configuration=configuration,
-                                                        integration_id=integration_id,
                                                         user_id=user_id,
-                                                        configuration_id=configuration_id)
+                                                        configuration_id=configuration_id,
+                                                        bot_name=bot_name)
             db.session.add(new_tg_configuraton)
             db.session.commit()
 
         except sqlalchemy.exc.IntegrityError:
-            old_integrations = Integration.query.filter_by(user_id=user_id).all()
+            old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
             msg = "This bot is already active on another assistant"
             return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
         
         except Exception as e:
-            old_integrations = Integration.query.filter_by(user_id=user_id).all()
+            old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
             msg = "This bot is already active on another assistant"
             return render_template("dashboard.html", old_integrations=old_integrations, msg=e)
 
@@ -98,12 +83,12 @@ def new_integration(token_data=None):
                 return render_template("telegram_integration.html", open_ai_key=open_ai_key, assistants=my_assistants.data)
             
         except openai.AuthenticationError:
-            old_integrations = Integration.query.filter_by(user_id=user_id).all()
+            old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
             msg = "Wrong API key"
             return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
         
         except Exception as e:
-            old_integrations = Integration.query.filter_by(user_id=user_id).all()
+            old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
             return render_template("dashboard.html", old_integrations=old_integrations, msg=e)
         
     elif request.method == "POST":
@@ -117,41 +102,28 @@ def new_integration(token_data=None):
             bot_name = verify_tg_bot(bot_token)
 
             if bot_name:
-                integration_id = add_integration(configuration=configuration,
-                                         user_id=user_id)
-                
-                
                 configuration_id = add_tg_configuration(open_ai_key=open_ai_key, 
                                     assistant_id=assistant_id, 
                                     bot_token=bot_token,
                                     configuration=configuration,
-                                    integration_id=integration_id,
-                                    user_id=user_id)
+                                    user_id=user_id,
+                                    bot_name=bot_name)
 
                 if configuration_id == False:
-                    integration_to_delete = Integration.query.filter_by(integration_id=integration_id).first()
-                    db.session.delete(integration_to_delete)
-                    db.session.commit()
-                    
-                    old_integrations = Integration.query.filter_by(user_id=user_id).all()
+                    old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
                     msg = "This bot is already active on another assistant"
                     return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
                 
                 else:
-                    response = setting_webhook(configuration_id=configuration_id,
-                                            bot_token=bot_token)
-
-                    if response.ok:
-                        msg = "Bot has been set successfully" 
-                        return render_template("dashboard.html", msg=msg, color="green")
-                    else:
-                        msg = "There was an error" 
-                        return render_template("dashboard.html", msg=msg)
+                    old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
+                    msg = "Configuration added successfully"
+                    return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
             else:
-                old_integrations = Integration.query.filter_by(user_id=user_id).all()
+                old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
                 msg = "Wrong bot token"
                 return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
 
+@dashboard_view.route("/activation/<configuration_id>/<bot_token>")
 def setting_webhook(configuration_id, bot_token):
     base_url = request.headers['X-Forwarded-Proto'] + "://" + request.headers['X-Forwarded-Host']
     WEBHOOK_URL = f'{base_url}/telegram/{configuration_id}'
@@ -159,4 +131,14 @@ def setting_webhook(configuration_id, bot_token):
     payload = {'url': WEBHOOK_URL}
     response = requests.post(url, json=payload)
 
-    return response
+
+    if response.ok:
+        existing_configuration = Telegram_configuration.query.filter_by(configuration_id=configuration_id).first()
+        existing_configuration.status = True
+        db.session.commit()
+
+        return redirect(url_for("dashboard_view.dashboard"))
+    
+    else:
+        msg = "There was an error" 
+        return render_template("dashboard.html", msg=msg)
