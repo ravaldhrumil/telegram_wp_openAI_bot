@@ -1,72 +1,24 @@
 from flask import redirect, render_template, Blueprint, request, url_for
-import sqlalchemy
 from src.views.auth_view import check_for_token
 from src.models.model import *
-from openai import OpenAI
 import openai
 import requests
+from twilio.rest import Client
+from src.models.configuration import *
+from src.handlers.open_ai import fetch_assistants
+from src.handlers.telegram import verify_tg_bot, add_tg_configuration
+from src.handlers.whatsapp import add_wp_configuration
 
 dashboard_view = Blueprint("dashboard_view",__name__)
 
-
 @dashboard_view.route("/dashboard")
+@dashboard_view.route("/dashboard/<msg>")
 @check_for_token
-def dashboard(token_data=None):
+def dashboard(token_data=None, msg=None):
     user_id = token_data["user_id"]
-    old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
-    return render_template("dashboard.html", old_integrations=old_integrations)
-
-def verify_tg_bot(token):
-    url = f"https://api.telegram.org/bot{token}/getMe"
-    response = requests.get(url)
-    data = response.json()
-    if response.status_code == 200 and data["ok"]:   
-        bot_name = data["result"]["username"]
-        return bot_name
-    else:
-        return False
-
-def fetch_assistants(open_ai_key):
-        client = OpenAI(api_key = open_ai_key)
-
-        my_assistants = client.beta.assistants.list(
-            order="desc",
-            limit="20",
-        )
-
-        return my_assistants
-
-
-def add_tg_configuration(open_ai_key, assistant_id, bot_token, configuration, user_id, bot_name):
-    bot = Telegram_configuration.query.filter_by(bot_token=bot_token).first()
-
-    if bot:
-        return False
-
-    else:
-        try:
-            configuration_id = str(uuid.uuid4())
-            new_tg_configuraton = Telegram_configuration(open_ai_key=open_ai_key, 
-                                                        assistant_id=assistant_id, 
-                                                        bot_token=bot_token,
-                                                        configuration=configuration,
-                                                        user_id=user_id,
-                                                        configuration_id=configuration_id,
-                                                        bot_name=bot_name)
-            db.session.add(new_tg_configuraton)
-            db.session.commit()
-
-        except sqlalchemy.exc.IntegrityError:
-            old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
-            msg = "This bot is already active on another assistant"
-            return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
-        
-        except Exception as e:
-            old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
-            msg = "This bot is already active on another assistant"
-            return render_template("dashboard.html", old_integrations=old_integrations, msg=e)
-
-    return configuration_id
+    old_tg_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
+    old_wp_integrations = Whatsapp_configuration.query.filter_by(user_id=user_id).all()
+    return render_template("dashboard.html", old_tg_integrations=old_tg_integrations, old_wp_integrations=old_wp_integrations , msg=msg)
 
 @dashboard_view.route("/new_integration", methods=["GET","POST"])
 @check_for_token
@@ -79,17 +31,20 @@ def new_integration(token_data=None):
 
         try:
             my_assistants = fetch_assistants(open_ai_key=open_ai_key)
+
             if configuration == "telegram":
                 return render_template("telegram_integration.html", open_ai_key=open_ai_key, assistants=my_assistants.data)
             
+            if configuration == "whatsapp":
+                return render_template("whatsapp_integraion.html", open_ai_key=open_ai_key, assistants=my_assistants.data)
+            
         except openai.AuthenticationError:
-            old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
             msg = "Wrong API key"
-            return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
+            return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
         
         except Exception as e:
-            old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
-            return render_template("dashboard.html", old_integrations=old_integrations, msg=e)
+            msg = e
+            return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
         
     elif request.method == "POST":
         configuration = request.form["configuration"]
@@ -98,7 +53,6 @@ def new_integration(token_data=None):
 
         if configuration == "telegram":
             bot_token = request.form["bot_token"]
-
             bot_name = verify_tg_bot(bot_token)
 
             if bot_name:
@@ -110,35 +64,60 @@ def new_integration(token_data=None):
                                     bot_name=bot_name)
 
                 if configuration_id == False:
-                    old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
                     msg = "This bot is already active on another assistant"
-                    return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
+                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
                 
                 else:
-                    old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
                     msg = "Configuration added successfully"
-                    return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
+                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
             else:
-                old_integrations = Telegram_configuration.query.filter_by(user_id=user_id).all()
                 msg = "Wrong bot token"
-                return render_template("dashboard.html", old_integrations=old_integrations, msg=msg)
+                return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+            
+        if configuration == "whatsapp":
+            twilio_sid = request.form["twilio_sid"]
+            twilio_auth = request.form["twilio_auth"]
+            phone_number = request.form["phone_number"]
 
-@dashboard_view.route("/activation/<configuration_id>/<bot_token>")
-def setting_webhook(configuration_id, bot_token):
+            try:
+                client = Client(twilio_sid, twilio_auth)
+                account = client.api.accounts(twilio_sid).fetch()
+
+                configuration_id = add_wp_configuration(open_ai_key=open_ai_key, 
+                                    assistant_id=assistant_id,
+                                    configuration=configuration,
+                                    user_id=user_id,
+                                    phone_number=phone_number,
+                                    twilio_sid=twilio_sid,
+                                    twilio_auth=twilio_auth)
+
+                if configuration_id == False:
+                    msg = "This bot is already active on another assistant"
+                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+                
+                else:
+                    msg = "Configuration added successfully"
+                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+
+            except Exception as e:
+                msg = "Wrong twilio info"
+                return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+
+@dashboard_view.route("/tg_activation/<configuration_id>/<bot_token>")
+def setting_tg_webhook(configuration_id, bot_token):
     base_url = request.headers['X-Forwarded-Proto'] + "://" + request.headers['X-Forwarded-Host']
     WEBHOOK_URL = f'{base_url}/telegram/{configuration_id}'
     url = f'https://api.telegram.org/bot{bot_token}/setWebhook'
     payload = {'url': WEBHOOK_URL}
     response = requests.post(url, json=payload)
 
-
     if response.ok:
         existing_configuration = Telegram_configuration.query.filter_by(configuration_id=configuration_id).first()
         existing_configuration.status = True
         db.session.commit()
-
-        return redirect(url_for("dashboard_view.dashboard"))
+        msg = "Bot setup successfully"
+        return redirect(url_for("dashboard_view.dashboard", msg=msg))
     
     else:
         msg = "There was an error" 
-        return render_template("dashboard.html", msg=msg)
+        return redirect(url_for(f"dashboard_view.dashboard", msg=msg))

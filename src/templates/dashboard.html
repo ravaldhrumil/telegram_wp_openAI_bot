@@ -16,6 +16,8 @@
 
     <div class="integration-container">
       <div>Older Integrations</div>
+      {% if old_tg_integrations %}
+        
       <table border="1" rules="all">
         <thead>
           <tr>
@@ -25,7 +27,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for integration in old_integrations %}
+          {% for integration in old_tg_integrations %}
           <tr>
             <td>{{ integration.configuration }}</td>
             <td>{{ integration.bot_name }}</td>
@@ -33,10 +35,36 @@
               {% if integration.status %}
                 Active
               {% else %}
-                <form action="/activation/{{integration.configuration_id}}/{{integration.bot_token}}">
+                <form action="/tg_activation/{{integration.configuration_id}}/{{integration.bot_token}}">
                   <button type="Submit">Activate</button>
                 </form>
               {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% endif %}
+      
+{% if old_wp_integrations %}
+  
+              
+      <table border="1" rules="all">
+        <thead>
+          <tr>
+          <th>Configuration</th>
+          <th>Phone number</th>
+          <th>Get url</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for integration in old_wp_integrations %}
+          <tr>
+            <td>{{ integration.configuration }}</td>
+            <td>{{ integration.phone_number }}</td>
+            <td>
+                  <button id="get_wp_webhook_url" data-configuration-id="{{integration.configuration_id}}">Get</button>
             </td>
           </tr>
           <div class="integration">{{ integration.configuration }}</div>
@@ -44,6 +72,7 @@
         </tbody>
       </table>
       
+      {% endif %}
 
 
 
@@ -56,6 +85,13 @@
           value="telegram"
           required
         />Telegram<br />
+        <input
+          type="radio"
+          name="configuration"
+          id="configuration"
+          value="whatsapp"
+          required
+        />WhatsApp<br />
         <label for="open_ai_key">Open AI Key:</label><br />
         <input
           type="text"
@@ -67,5 +103,20 @@
         <button type="submit">New Integration</button>
       </form>
     </div>
+
+    <script>
+      const get_wp_webhook_url = (configuration_id) => {
+        var baseURL = window.location.protocol + "//" + window.location.host + "/";
+        webhook_url = baseURL + "/whatsapp/" + configuration_id
+        alert(webhook_url);
+    };
+
+    document.getElementById("get_wp_webhook_url").addEventListener("click", function() {
+      var baseURL = window.location.protocol + "//" + window.location.host + "/";
+      var configuration_id = this.getAttribute("data-configuration-id");
+      webhook_url = baseURL + "/whatsapp/" + configuration_id
+      alert(webhook_url)
+  });
+    </script>
   </body>
 </html>

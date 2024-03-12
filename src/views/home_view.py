@@ -1,33 +1,18 @@
-import threading
-from flask import Blueprint, request
-import flask
-from src.models.model import *
-from src.main.app import app
+from twilio.rest import Client
+from flask import Blueprint, redirect, url_for
 
-home_view = Blueprint(
-    'home_view',
-    __name__
-)
+home_view = Blueprint("home_view", __name__)
 
 
-@home_view.get('/home')
-def handle_home():
-    thread1 = threading.Thread(target=abc)
-    thread1.start()
+@home_view.route("/home/<msg>")
+@home_view.route("/home")
+def home(msg=None):
+    if msg:
+        return f"{msg}"
+    else:
+        return "Normal"
     
-    return "ADDED"
-
-
-
-
+@home_view.route("/abc")
 def abc():
-    xyz()
-
-def xyz():
-    lmn()
-
-def lmn():
-    with app.app_context():
-        new_thread = Openai_thread(user_id="123", thread_id="123", chat_id="123", configuration="telegram")
-        db.session.add(new_thread)
-        db.session.commit()
+    msg = "This is message"
+    return redirect(url_for("home_view.home", msg=msg))

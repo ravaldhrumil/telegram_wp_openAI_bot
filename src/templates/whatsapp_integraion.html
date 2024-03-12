@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WP configuration</title>
+    <link rel="stylesheet" href="../static/telegram_integration.css">
+  </head>
+  <body>
+    <h1>WP configuration</h1>
+    <form action="/new_integration" method="post">
+      <label>
+        App
+        <input type="text" name="configuration" value="whatsapp" readonly />
+      </label>
+      <label>
+        Open AI key
+        <input
+          type="text"
+          name="open_ai_key"
+          value="{{ open_ai_key }}"
+          readonly
+        />
+      </label>
+      <label>
+        Twilio SID
+        <input type="text" name="twilio_sid" placeholder="Twilio SID" required />
+      </label>
+      <label>
+        Twilio Auth
+        <input type="text" name="twilio_auth" placeholder="Twilio Auth" required />
+      </label>
+      <label>
+        Phone Number
+        <input type="text" name="phone_number" placeholder="Phone number" required />
+      </label>
+      <label>
+        Choose assistant: {% for assistant in assistants %}
+        <input
+          type="radio"
+          name="assistant_id"
+          value="{{ assistant.id }}"
+          required
+        />
+        {{ assistant.name }}<br />
+        {% endfor %}
+      </label>
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>
