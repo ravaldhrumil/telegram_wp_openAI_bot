@@ -31,6 +31,3 @@ app.register_blueprint(dashboard_view)
 
 from src.views.message_handle import message_view
 app.register_blueprint(message_view)
-
-from src.views.home_view import home_view
-app.register_blueprint(home_view)
