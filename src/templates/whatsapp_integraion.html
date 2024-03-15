@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WP configuration</title>
-    <link rel="stylesheet" href="../static/telegram_integration.css">
+    <link rel="stylesheet" href="../static/telegram_integration.css" />
   </head>
   <body>
     <h1>WP configuration</h1>
@@ -24,15 +24,30 @@
       </label>
       <label>
         Twilio SID
-        <input type="text" name="twilio_sid" placeholder="Twilio SID" required />
+        <input
+          type="text"
+          name="twilio_sid"
+          placeholder="Twilio SID"
+          required
+        />
       </label>
       <label>
         Twilio Auth
-        <input type="text" name="twilio_auth" placeholder="Twilio Auth" required />
+        <input
+          type="text"
+          name="twilio_auth"
+          placeholder="Twilio Auth"
+          required
+        />
       </label>
       <label>
         Phone Number
-        <input type="text" name="phone_number" placeholder="Phone number" required />
+        <input
+          type="text"
+          name="phone_number"
+          placeholder="Phone number"
+          required
+        />
       </label>
       <label>
         Choose assistant: {% for assistant in assistants %}

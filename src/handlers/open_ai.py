@@ -70,14 +70,11 @@ def check_thread(chat_id, user_id, open_ai_key):
     return thread_id
 
 def get_thread_id_from_recipient_id(chat_id, user_id):
-    print("get_thread_id_from_recipient_id")
     with app.app_context():
         thread_id = Openai_thread.query.filter_by(user_id=user_id, chat_id=chat_id).one_or_none()
     return thread_id
 
 def update_thread_id_from_recipient_id(chat_id, thread_id, user_id):
-    print("update_thread_id_from_recipient_id")
-    print("THREAD: ",thread_id)
     thread_id = thread_id[len("thread_"):]
     with app.app_context():
         thread = Openai_thread.query.filter_by(user_id=user_id, chat_id=chat_id).first()
