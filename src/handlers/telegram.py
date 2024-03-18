@@ -37,11 +37,13 @@ def add_tg_configuration(open_ai_key, assistant_id, bot_token, configuration, us
 
         except sqlalchemy.exc.IntegrityError:
             msg = "This bot is already active on another assistant"
-            return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+            bgcolor = "red"
+            return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
         
         except Exception as e:
             msg = "This bot is already active on another assistant"
-            return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+            bgcolor = "red"
+            return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
 
 def send_message_to_telegram(chat_id, response, TELEGRAM_BASE_URL):
     print("send_message")

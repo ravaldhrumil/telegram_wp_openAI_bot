@@ -6,7 +6,6 @@ import pytz
 from src.handlers.telegram import fetch_tg_configuration_details
 from src.handlers.whatsapp import handle_incoming_wp_message
 
-
 message_view = Blueprint("message_view", __name__)
 
 @message_view.route("/telegram/<configuration_id>",methods=["POST"])

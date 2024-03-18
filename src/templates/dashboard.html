@@ -7,11 +7,17 @@
     <link rel="stylesheet" href="../static/dashboard.css" />
   </head>
   <body>
-    {% if msg %} {% if color %}
-    <div style="background-color: green">{{msg}}</div>
-    {% else %}
-    <div class="message">{{ msg }}</div>
-    {% endif %} {% endif %}
+    {% if msg %} 
+      {% if bgcolor == 'green' %}
+        <div class="message" style="background-color: green">{{msg}}</div>
+      {% else %}
+        {% if bgcolor == 'red' %}
+        <div class="message" style="background-color: red">{{msg}}</div>
+        {% else %}
+          <div class="message">{{ msg }}</div>
+        {% endif %}
+      {% endif %} 
+    {% endif %}
     <h1>Dashboard</h1>
 
     <div class="integration-container">
@@ -24,6 +30,7 @@
             <th>Configuration</th>
             <th>Bot</th>
             <th>Status</th>
+            <th>Config</th>
           </tr>
         </thead>
         <tbody>
@@ -31,13 +38,26 @@
           <tr>
             <td>{{ integration.configuration }}</td>
             <td>{{ integration.bot_name }}</td>
+      
+              {% if integration.status %}
+                  <td style="background-color: green;">Bot Working</td>
+               {% else %}
+                  <td style="background-color: rgb(221, 57, 57);">Bot is inactive</td>
+              {% endif %}
+    
             <td>
-              {% if integration.status %} Active {% else %}
+              {% if integration.status %}
               <form
-                action="/tg_activation/{{integration.configuration_id}}/{{integration.bot_token}}"
-              >
-                <button type="Submit">Activate</button>
-              </form>
+                  action="/deactivate_tg_webhook/{{integration.configuration_id}}/{{integration.bot_token}}"
+                >
+                  <button type="Submit">De Activate</button>
+                </form> 
+               {% else %}
+                <form
+                  action="/activate_tg_webhook/{{integration.configuration_id}}/{{integration.bot_token}}"
+                >
+                  <button type="Submit">Activate</button>
+                </form>
               {% endif %}
             </td>
           </tr>
@@ -77,7 +97,7 @@
       {% endif %}
 
       <form action="/new_integration" method="get" class="integration">
-        <label for="configuration">New Integration:</label><br />
+        <label for="configuration">New Integration:</label>
         <input
           type="radio"
           name="configuration"
@@ -102,8 +122,8 @@
         /><br /><br />
         <button type="submit">New Integration</button>
       </form>
+      <div><b>* To start your WhatsApp bot please click on the get button and paste the provided url in your twilio sandbox setting</b></div>
     </div>
-
     <script>
       const get_wp_webhook_url = (configuration_id) => {
         var baseURL =

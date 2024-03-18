@@ -40,11 +40,13 @@ def new_integration(token_data=None):
             
         except openai.AuthenticationError:
             msg = "Wrong API key"
-            return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+            bgcolor = "red"
+            return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
         
         except Exception as e:
             msg = e
-            return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+            bgcolor = "red"
+            return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
         
     elif request.method == "POST":
         configuration = request.form["configuration"]
@@ -65,14 +67,17 @@ def new_integration(token_data=None):
 
                 if configuration_id == False:
                     msg = "This bot is already active on another assistant"
-                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+                    bgcolor = "red"
+                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
                 
                 else:
                     msg = "Configuration added successfully"
-                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+                    bgcolor = "green"
+                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
             else:
                 msg = "Wrong bot token"
-                return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+                bgcolor = "red"
+                return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
             
         if configuration == "whatsapp":
             twilio_sid = request.form["twilio_sid"]
@@ -93,18 +98,22 @@ def new_integration(token_data=None):
 
                 if configuration_id == False:
                     msg = "This bot is already active on another assistant"
-                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+                    bgcolor = "red"
+                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
                 
                 else:
                     msg = "Configuration added successfully"
-                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+                    bgcolor = "green"
+                    return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
 
             except Exception as e:
                 msg = "Wrong twilio info"
-                return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+                bgcolor = "red"
+                return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
 
-@dashboard_view.route("/tg_activation/<configuration_id>/<bot_token>")
-def setting_tg_webhook(configuration_id, bot_token):
+@dashboard_view.route("/activate_tg_webhook/<configuration_id>/<bot_token>")
+@check_for_token
+def activate_tg_webhook(configuration_id, bot_token, token_data=None):
     base_url = request.headers['X-Forwarded-Proto'] + "://" + request.headers['X-Forwarded-Host']
     WEBHOOK_URL = f'{base_url}/telegram/{configuration_id}'
     url = f'https://api.telegram.org/bot{bot_token}/setWebhook'
@@ -116,8 +125,28 @@ def setting_tg_webhook(configuration_id, bot_token):
         existing_configuration.status = True
         db.session.commit()
         msg = "Bot setup successfully"
-        return redirect(url_for("dashboard_view.dashboard", msg=msg))
+        bgcolor = "green"
+        return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
     
     else:
         msg = "There was an error" 
-        return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+        bgcolor = "red"
+        return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
+    
+@dashboard_view.route("/deactivate_tg_webhook/<configuration_id>/<bot_token>")
+@check_for_token
+def deactivate_tg_webhook(configuration_id, bot_token, token_data=None):
+    url = f'https://api.telegram.org/bot{bot_token}/setWebhook'
+    payload = {'url': ''}
+    response = requests.post(url, json=payload)
+    if response.ok:
+        existing_configuration = Telegram_configuration.query.filter_by(configuration_id=configuration_id).first()
+        existing_configuration.status = False
+        db.session.commit()
+        msg = "Webhook deactivated successfully!"
+        bgcolor = "green"
+        return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
+    else:
+        msg = f"Failed to deactivate webhook. Status code: {response.status_code}, Response: {response.text}" 
+        bgcolor = "red"
+        return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))

@@ -28,11 +28,13 @@ def add_wp_configuration(open_ai_key, assistant_id, configuration, user_id, phon
 
         except sqlalchemy.exc.IntegrityError:
             msg = "This bot is already active on another assistant"
-            return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+            bgcolor = "red"
+            return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
         
         except Exception as e:
             msg = e
-            return redirect(url_for(f"dashboard_view.dashboard", msg=msg))
+            bgcolor = "red"
+            return redirect(url_for(f"dashboard_view.dashboard", msg=msg, bgcolor=bgcolor))
 
     return configuration_id
 
